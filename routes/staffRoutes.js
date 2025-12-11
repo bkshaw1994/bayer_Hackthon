@@ -6,6 +6,7 @@ const {
   createStaff,
   updateStaff,
   deleteStaff,
+  getWeeklyStats,
 } = require('../controllers/staffController');
 const { protect } = require('../middleware/auth');
 
@@ -125,6 +126,7 @@ const { protect } = require('../middleware/auth');
  *         description: Not authorized
  *   post:
  *     summary: Create new staff member
+ *     description: Creates a new staff member and automatically generates attendance records with "Not Marked" status for the next 7 days with their assigned shift.
  *     tags: [Staff]
  *     security:
  *       - bearerAuth: []
@@ -160,7 +162,8 @@ const { protect } = require('../middleware/auth');
  *               success: false
  *               error: \"Staff with this ID already exists\"
  */
-router.route('/').get(protect, getStaffs).post(protect, createStaff);
+router.get('/', protect, getStaffs);
+router.post('/', protect, createStaff);
 
 /**
  * @swagger
@@ -286,6 +289,72 @@ router.route('/').get(protect, getStaffs).post(protect, createStaff);
  *               success: false
  *               error: "Staff not found"
  */
-router.route('/:id').get(protect, getStaff).put(protect, updateStaff).delete(protect, deleteStaff);
+router.get('/:id', protect, getStaff);
+router.put('/:id', protect, updateStaff);
+router.delete('/:id', protect, deleteStaff);
+
+/**
+ * @swagger
+ * /api/staff/{staffId}/weekly-stats:
+ *   get:
+ *     summary: Get weekly attendance statistics for a staff member
+ *     description: Returns attendance statistics for the last 7 days including present, absent, leave, half-day counts and attendance rate
+ *     tags: [Staff]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: staffId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Staff MongoDB _id (ObjectId) or staffId (e.g., "D001")
+ *         examples:
+ *           objectId:
+ *             value: "674b1234567890abcdef1234"
+ *           staffId:
+ *             value: "D001"
+ *     responses:
+ *       200:
+ *         description: Weekly attendance statistics
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               staff:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "Dr. Sarah Johnson"
+ *                 staffId: "D001"
+ *                 role: "Doctor"
+ *                 shift: "Morning"
+ *               period:
+ *                 startDate: "2025-12-05"
+ *                 endDate: "2025-12-11"
+ *               statistics:
+ *                 totalDays: 7
+ *                 present: 5
+ *                 absent: 1
+ *                 leave: 1
+ *                 halfDay: 0
+ *                 notMarked: 0
+ *                 attendanceRate: "83.3%"
+ *               records:
+ *                 - date: "2025-12-05"
+ *                   shift: "Morning"
+ *                   status: "Present"
+ *                   remarks: ""
+ *                 - date: "2025-12-06"
+ *                   shift: "Morning"
+ *                   status: "Present"
+ *                   remarks: ""
+ *       404:
+ *         description: Staff not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: "Staff not found"
+ */
+router.get('/:staffId/weekly-stats', protect, getWeeklyStats);
 
 module.exports = router;

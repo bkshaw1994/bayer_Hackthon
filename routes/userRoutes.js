@@ -67,7 +67,8 @@ const { protect } = require('../middleware/auth');
  *               success: false
  *               error: "User already exists"
  */
-router.route('/').get(protect, getUsers).post(protect, createUser);
+router.get('/', protect, getUsers);
+router.post('/', protect, createUser);
 
 /**
  * @swagger
@@ -151,6 +152,8 @@ router.route('/').get(protect, getUsers).post(protect, createUser);
  *       404:
  *         description: User not found
  */
-router.route('/:id').get(protect, getUser).put(protect, updateUser).delete(protect, deleteUser);
+router.get('/:id', protect, getUser);
+router.put('/:id', protect, updateUser);
+router.delete('/:id', protect, deleteUser);
 
 module.exports = router;

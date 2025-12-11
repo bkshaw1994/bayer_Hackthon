@@ -1,7 +1,6 @@
 const Staff = require('../models/Staff');
 const Attendance = require('../models/Attendance');
 
-// Helper function to check shift requirements
 const checkShiftRequirements = (staffByShift) => {
   const requirements = {
     'Doctor': 1,
@@ -85,8 +84,6 @@ const checkShiftRequirements = (staffByShift) => {
   return shiftStatus;
 };
 
-// @desc    Get all staff with shift requirements check
-// @route   GET /api/staff?shift=Morning&date=2024-12-11 (shift and date filters are optional)
 const getStaffs = async (req, res) => {
   try {
     // Build query filter
@@ -161,8 +158,6 @@ const getStaffs = async (req, res) => {
   }
 };
 
-// @desc    Get single staff member
-// @route   GET /api/staff/:id?date=2024-12-11 (date filter is optional)
 const getStaff = async (req, res) => {
   try {
     const staff = await Staff.findById(req.params.id);
@@ -207,11 +202,34 @@ const getStaff = async (req, res) => {
   }
 };
 
-// @desc    Create new staff member
-// @route   POST /api/staff
 const createStaff = async (req, res) => {
   try {
     const staff = await Staff.create(req.body);
+    
+    // Create attendance records for upcoming 7 days if user is authenticated
+    if (req.user && req.user.id) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const attendanceRecords = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        
+        attendanceRecords.push({
+          staffId: staff._id,
+          date: date,
+          shift: staff.shift,
+          status: 'Absent',
+          remarks: '',
+          markedBy: req.user.id,
+        });
+      }
+      
+      // Insert attendance records for next 7 days
+      await Attendance.insertMany(attendanceRecords);
+    }
+    
     res.status(201).json({ 
       success: true, 
       data: staff 
@@ -224,8 +242,6 @@ const createStaff = async (req, res) => {
   }
 };
 
-// @desc    Update staff member
-// @route   PUT /api/staff/:id
 const updateStaff = async (req, res) => {
   try {
     const oldStaff = await Staff.findById(req.params.id);
@@ -269,8 +285,6 @@ const updateStaff = async (req, res) => {
   }
 };
 
-// @desc    Delete staff member
-// @route   DELETE /api/staff/:id
 const deleteStaff = async (req, res) => {
   try {
     const staff = await Staff.findByIdAndDelete(req.params.id);
@@ -292,10 +306,99 @@ const deleteStaff = async (req, res) => {
   }
 };
 
+const getWeeklyStats = async (req, res) => {
+  try {
+    // Support lookup by both _id and staffId
+    let staff;
+    if (req.params.staffId.match(/^[0-9a-fA-F]{24}$/)) {
+      staff = await Staff.findById(req.params.staffId);
+    } else {
+      staff = await Staff.findOne({ staffId: req.params.staffId });
+    }
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        error: 'Staff not found'
+      });
+    }
+
+    // Get current week (last 7 days)
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Fetch attendance records for the week
+    const attendanceRecords = await Attendance.find({
+      staffId: staff._id,
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).sort({ date: 1 });
+
+    // Calculate statistics
+    const stats = {
+      totalDays: 7,
+      present: 0,
+      absent: 0,
+      leave: 0,
+      halfDay: 0,
+      notMarked: 0
+    };
+
+    attendanceRecords.forEach(record => {
+      if (record.status === 'Present') stats.present++;
+      else if (record.status === 'Absent') stats.absent++;
+      else if (record.status === 'Leave') stats.leave++;
+      else if (record.status === 'Half-Day') stats.halfDay++;
+      else if (record.status === 'Not Marked') stats.notMarked++;
+    });
+
+    // Calculate attendance rate
+    const markedDays = stats.present + stats.absent + stats.leave + stats.halfDay;
+    const attendanceRate = markedDays > 0 ? ((stats.present / markedDays) * 100).toFixed(1) : '0.0';
+
+    res.json({
+      success: true,
+      staff: {
+        _id: staff._id,
+        name: staff.name,
+        staffId: staff.staffId,
+        role: staff.role,
+        shift: staff.shift
+      },
+      period: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      },
+      statistics: {
+        ...stats,
+        attendanceRate: `${attendanceRate}%`
+      },
+      records: attendanceRecords.map(record => ({
+        date: record.date.toISOString().split('T')[0],
+        shift: record.shift,
+        status: record.status,
+        remarks: record.remarks
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getStaffs,
   getStaff,
   createStaff,
   updateStaff,
   deleteStaff,
+  getWeeklyStats,
 };

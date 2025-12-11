@@ -3,7 +3,6 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 
 let mongoServer;
 
-// Connect to in-memory database
 const connect = async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
@@ -11,7 +10,6 @@ const connect = async () => {
   await mongoose.connect(uri);
 };
 
-// Close database connection
 const closeDatabase = async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
@@ -20,7 +18,6 @@ const closeDatabase = async () => {
   }
 };
 
-// Clear database
 const clearDatabase = async () => {
   const collections = mongoose.connection.collections;
   for (const key in collections) {

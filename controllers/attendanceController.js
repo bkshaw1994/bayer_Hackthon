@@ -1,8 +1,6 @@
 const Attendance = require('../models/Attendance');
 const Staff = require('../models/Staff');
 
-// @desc    Mark attendance for staff members
-// @route   POST /api/attendance
 const markAttendance = async (req, res) => {
   try {
     const { staffId, date, shift, status, remarks } = req.body;
@@ -62,8 +60,6 @@ const markAttendance = async (req, res) => {
   }
 };
 
-// @desc    Mark bulk attendance (multiple staff at once)
-// @route   POST /api/attendance/bulk
 const markBulkAttendance = async (req, res) => {
   try {
     const { attendanceRecords } = req.body; // Array of { staffId, date, shift, status, remarks }
@@ -129,8 +125,6 @@ const markBulkAttendance = async (req, res) => {
   }
 };
 
-// @desc    Get attendance records with filters
-// @route   GET /api/attendance?date=2024-01-01&shift=Morning&staffId=xxx&status=Present
 const getAttendance = async (req, res) => {
   try {
     const { date, shift, staffId, status } = req.query;
@@ -202,8 +196,6 @@ const getAttendance = async (req, res) => {
   }
 };
 
-// @desc    Get attendance by staff ID
-// @route   GET /api/attendance/staff/:staffId
 const getAttendanceByStaff = async (req, res) => {
   try {
     const { staffId } = req.params;
@@ -263,8 +255,6 @@ const getAttendanceByStaff = async (req, res) => {
   }
 };
 
-// @desc    Update attendance record
-// @route   PUT /api/attendance/:id
 const updateAttendance = async (req, res) => {
   try {
     const { status, remarks } = req.body;
@@ -298,8 +288,6 @@ const updateAttendance = async (req, res) => {
   }
 };
 
-// @desc    Delete attendance record
-// @route   DELETE /api/attendance/:id
 const deleteAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.findById(req.params.id);
@@ -325,6 +313,152 @@ const deleteAttendance = async (req, res) => {
   }
 };
 
+const quickMarkAttendance = async (req, res) => {
+  try {
+    const { staffId, date } = req.body;
+
+    if (!staffId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'staffId and date are required'
+      });
+    }
+
+    // Support lookup by both _id and staffId
+    let staff;
+    if (staffId.match(/^[0-9a-fA-F]{24}$/)) {
+      staff = await Staff.findById(staffId);
+    } else {
+      staff = await Staff.findOne({ staffId: staffId });
+    }
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: 'Staff not found'
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    // Check if attendance already exists
+    const existingAttendance = await Attendance.findOne({
+      staffId: staff._id,
+      date: attendanceDate,
+      shift: staff.shift
+    });
+
+    if (existingAttendance) {
+      existingAttendance.status = 'Present';
+      existingAttendance.remarks = req.body.remarks || '';
+      existingAttendance.markedBy = req.user.id;
+      existingAttendance.markedAt = Date.now();
+      await existingAttendance.save();
+
+      return res.json({
+        success: true,
+        message: 'Attendance marked as Present',
+        data: existingAttendance
+      });
+    }
+
+    // Create new attendance record
+    const attendance = await Attendance.create({
+      staffId: staff._id,
+      date: attendanceDate,
+      shift: staff.shift,
+      status: 'Present',
+      remarks: req.body.remarks || '',
+      markedBy: req.user.id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Attendance marked as Present',
+      data: attendance
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const applyLeave = async (req, res) => {
+  try {
+    const { staffId, date, remarks } = req.body;
+
+    if (!staffId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'staffId and date are required'
+      });
+    }
+
+    // Support lookup by both _id and staffId
+    let staff;
+    if (staffId.match(/^[0-9a-fA-F]{24}$/)) {
+      staff = await Staff.findById(staffId);
+    } else {
+      staff = await Staff.findOne({ staffId: staffId });
+    }
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: 'Staff not found'
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    // Check if attendance already exists
+    const existingAttendance = await Attendance.findOne({
+      staffId: staff._id,
+      date: attendanceDate,
+      shift: staff.shift
+    });
+
+    if (existingAttendance) {
+      existingAttendance.status = 'Leave';
+      existingAttendance.remarks = remarks || 'Leave applied';
+      existingAttendance.markedBy = req.user.id;
+      existingAttendance.markedAt = Date.now();
+      await existingAttendance.save();
+
+      return res.json({
+        success: true,
+        message: 'Leave applied successfully',
+        data: existingAttendance
+      });
+    }
+
+    // Create new attendance record with Leave status
+    const attendance = await Attendance.create({
+      staffId: staff._id,
+      date: attendanceDate,
+      shift: staff.shift,
+      status: 'Leave',
+      remarks: remarks || 'Leave applied',
+      markedBy: req.user.id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Leave applied successfully',
+      data: attendance
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   markAttendance,
   markBulkAttendance,
@@ -332,4 +466,6 @@ module.exports = {
   getAttendanceByStaff,
   updateAttendance,
   deleteAttendance,
+  quickMarkAttendance,
+  applyLeave,
 };

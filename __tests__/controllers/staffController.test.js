@@ -3,6 +3,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/User');
 const Staff = require('../../models/Staff');
+const Attendance = require('../../models/Attendance');
 const staffRoutes = require('../../routes/staffRoutes');
 const db = require('../testSetup');
 
@@ -92,7 +93,7 @@ describe('Staff Controller Tests', () => {
         name: 'New Doctor',
         staffId: 'NEW001',
         role: 'Doctor',
-        shift: 'Night (12:00 AM - 8:00 AM)',
+        shift: 'Morning',
       };
 
       const response = await request(app)
@@ -226,6 +227,136 @@ describe('Staff Controller Tests', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(404);
+    });
+  });
+
+  describe('GET /api/staff/:staffId/weekly-stats - Get Weekly Stats', () => {
+    let staff;
+
+    beforeEach(async () => {
+      staff = await Staff.create({
+        name: 'Test Staff',
+        staffId: 'T001',
+        role: 'Nurse',
+        shift: 'Morning'
+      });
+    });
+
+    it('should get weekly stats with staffId', async () => {
+      // Create some attendance records for the past 7 days
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        await Attendance.create({
+          staffId: staff._id,
+          date: date,
+          shift: 'Morning',
+          status: i % 2 === 0 ? 'Present' : 'Absent'
+        });
+      }
+
+      const response = await request(app)
+        .get(`/api/staff/${staff.staffId}/weekly-stats`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.staff).toHaveProperty('staffId', staff.staffId);
+      expect(response.body.staff).toHaveProperty('name', staff.name);
+      expect(response.body).toHaveProperty('statistics');
+      expect(response.body.records).toHaveLength(7);
+    });
+
+    it('should get weekly stats with MongoDB ObjectId', async () => {
+      // Create some attendance records
+      const today = new Date();
+      for (let i = 0; i < 5; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        await Attendance.create({
+          staffId: staff._id,
+          date: date,
+          shift: 'Morning',
+          status: 'Present'
+        });
+      }
+
+      const response = await request(app)
+        .get(`/api/staff/${staff._id}/weekly-stats`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.staff).toHaveProperty('staffId', staff.staffId);
+      expect(response.body.records.length).toBeGreaterThan(0);
+    });
+
+    it('should calculate statistics correctly', async () => {
+      // Create specific attendance records
+      const today = new Date();
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        dates.push(date);
+      }
+
+      await Attendance.create({ staffId: staff._id, date: dates[0], shift: 'Morning', status: 'Present' });
+      await Attendance.create({ staffId: staff._id, date: dates[1], shift: 'Morning', status: 'Present' });
+      await Attendance.create({ staffId: staff._id, date: dates[2], shift: 'Morning', status: 'Absent' });
+      await Attendance.create({ staffId: staff._id, date: dates[3], shift: 'Morning', status: 'Leave' });
+      await Attendance.create({ staffId: staff._id, date: dates[4], shift: 'Morning', status: 'Half-Day' });
+
+      const response = await request(app)
+        .get(`/api/staff/${staff.staffId}/weekly-stats`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.statistics.present).toBeGreaterThanOrEqual(2);
+      expect(response.body.statistics.absent).toBeGreaterThanOrEqual(1);
+      expect(response.body.statistics.leave).toBeGreaterThanOrEqual(1);
+      expect(response.body.statistics.halfDay).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should return 7 days of records', async () => {
+      // Create attendance records for 7 days
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        await Attendance.create({
+          staffId: staff._id,
+          date: date,
+          shift: 'Morning',
+          status: 'Present'
+        });
+      }
+
+      const response = await request(app)
+        .get(`/api/staff/${staff.staffId}/weekly-stats`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.records).toHaveLength(7);
+    });
+
+    it('should fail with invalid staffId', async () => {
+      const response = await request(app)
+        .get('/api/staff/INVALID999/weekly-stats')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should fail with invalid ObjectId format', async () => {
+      const response = await request(app)
+        .get('/api/staff/invalid-object-id/weekly-stats')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
     });
   });
 });

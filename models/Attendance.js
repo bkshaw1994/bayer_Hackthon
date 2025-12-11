@@ -38,7 +38,6 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Create compound index for unique attendance per staff per date per shift
 attendanceSchema.index({ staffId: 1, date: 1, shift: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

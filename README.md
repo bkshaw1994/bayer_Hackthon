@@ -25,18 +25,6 @@ A comprehensive Node.js backend API for managing healthcare staff scheduling and
 npm install
 ```
 
-### Seed Database (Optional)
-```bash
-# Seed admin users
-node seedUsers.js
-
-# Seed staff data  
-node seedStaff.js
-
-# Seed attendance records
-node seedAttendance.js
-```
-
 #### Development Mode (with auto-restart)
 ```bash
 npm run dev
@@ -58,7 +46,7 @@ Server starts on `http://localhost:3000`
 1. Start the server
 2. Open http://localhost:3000/api-docs
 3. Login via `/api/auth/login`:
-   - Username: `johndoe` | Password: `password123`
+   - Username: `bkshaw` | Password: `password123`
 4. Copy the JWT token from response
 5. Click "Authorize" in Swagger UI and paste token
 6. Test all endpoints interactively
@@ -68,7 +56,7 @@ Server starts on `http://localhost:3000`
 **Login**: `POST /api/auth/login`
 ```json
 {
-  "userName": "johndoe",
+  "userName": "bkshaw",
   "password": "password123"
 }
 ```
@@ -162,12 +150,10 @@ BackEnd/
 
 ## 📝 Demo Credentials
 
-- **User 1**: `johndoe` / `password123`
-- **User 2**: `janesmith` / `demo1234`
+- **User 1**: `bkshaw` / `password123`
+- **User 2**: `venky` / `demo1234`
 
 ## 📄 Documentation
-
-See [COMMANDS.md](COMMANDS.md) for detailed development history and all prompts.
 
 ---
 

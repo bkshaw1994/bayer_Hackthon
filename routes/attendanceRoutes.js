@@ -8,9 +8,10 @@ const {
   getAttendanceByStaff,
   updateAttendance,
   deleteAttendance,
+  quickMarkAttendance,
+  applyLeave,
 } = require('../controllers/attendanceController');
 
-// All routes require authentication
 router.use(protect);
 
 /**
@@ -264,16 +265,116 @@ router.use(protect);
  *         description: Attendance record not found
  */
 
-// Attendance routes
-router.route('/')
-  .get(getAttendance)
-  .post(markAttendance);
+/**
+ * @swagger
+ * /api/attendance/mark:
+ *   post:
+ *     summary: Quick mark attendance as Present
+ *     description: Marks a staff member's attendance as Present for a specific date. Supports both MongoDB ObjectId and staffId.
+ *     tags: [Attendance]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - staffId
+ *               - date
+ *             properties:
+ *               staffId:
+ *                 type: string
+ *                 description: Staff MongoDB _id or staffId (e.g., "D001")
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Date for attendance (YYYY-MM-DD)
+ *               remarks:
+ *                 type: string
+ *                 description: Optional remarks
+ *           example:
+ *             staffId: "D001"
+ *             date: "2025-12-12"
+ *             remarks: "On time"
+ *     responses:
+ *       201:
+ *         description: Attendance marked successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Attendance marked as Present"
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 staffId: "674b1234567890abcdef5678"
+ *                 date: "2025-12-12"
+ *                 shift: "Morning"
+ *                 status: "Present"
+ *                 remarks: "On time"
+ *       404:
+ *         description: Staff not found
+ *
+ * /api/attendance/leave:
+ *   post:
+ *     summary: Apply leave for a staff member
+ *     description: Marks a staff member's attendance as Leave for a specific date. Supports both MongoDB ObjectId and staffId.
+ *     tags: [Attendance]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - staffId
+ *               - date
+ *             properties:
+ *               staffId:
+ *                 type: string
+ *                 description: Staff MongoDB _id or staffId (e.g., "D001")
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Date for leave (YYYY-MM-DD)
+ *               remarks:
+ *                 type: string
+ *                 description: Reason for leave
+ *           example:
+ *             staffId: "D001"
+ *             date: "2025-12-12"
+ *             remarks: "Sick leave"
+ *     responses:
+ *       201:
+ *         description: Leave applied successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Leave applied successfully"
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 staffId: "674b1234567890abcdef5678"
+ *                 date: "2025-12-12"
+ *                 shift: "Morning"
+ *                 status: "Leave"
+ *                 remarks: "Sick leave"
+ *       404:
+ *         description: Staff not found
+ */
+
+router.get('/', getAttendance);
+router.post('/', markAttendance);
 
 router.post('/bulk', markBulkAttendance);
+router.post('/mark', quickMarkAttendance);
+router.post('/leave', applyLeave);
 
-router.route('/:id')
-  .put(updateAttendance)
-  .delete(deleteAttendance);
+router.put('/:id', updateAttendance);
+router.delete('/:id', deleteAttendance);
 
 router.get('/staff/:staffId', getAttendanceByStaff);
 

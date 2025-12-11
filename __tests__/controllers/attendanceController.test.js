@@ -8,7 +8,6 @@ const User = require('../../models/User');
 const attendanceRoutes = require('../../routes/attendanceRoutes');
 const { connect, closeDatabase, clearDatabase } = require('../testSetup');
 
-// Mock JWT_SECRET
 process.env.JWT_SECRET = 'test_secret_key';
 
 const app = express();
@@ -427,6 +426,173 @@ describe('Attendance Controller', () => {
 
       expect(res.status).toBe(404);
       expect(res.body.message).toBe('Attendance record not found');
+    });
+  });
+
+  describe('POST /api/attendance/mark - Quick Mark Attendance', () => {
+    it('should mark attendance as Present with staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: 'DOC001',
+          date: '2025-12-12',
+          remarks: 'On time'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Attendance marked as Present');
+      expect(res.body.data.status).toBe('Present');
+      expect(res.body.data.remarks).toBe('On time');
+    });
+
+    it('should mark attendance as Present with MongoDB ObjectId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-13',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('Present');
+    });
+
+    it('should update existing attendance to Present', async () => {
+      // First mark
+      await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-14',
+        });
+
+      // Update to Present
+      const res = await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-14',
+          remarks: 'Updated'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('Present');
+      expect(res.body.data.remarks).toBe('Updated');
+    });
+
+    it('should fail without staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          date: '2025-12-12'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should fail with invalid staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: 'INVALID',
+          date: '2025-12-12'
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Staff not found');
+    });
+  });
+
+  describe('POST /api/attendance/leave - Apply Leave', () => {
+    it('should apply leave with staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: 'DOC001',
+          date: '2025-12-15',
+          remarks: 'Sick leave'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Leave applied successfully');
+      expect(res.body.data.status).toBe('Leave');
+      expect(res.body.data.remarks).toBe('Sick leave');
+    });
+
+    it('should apply leave with MongoDB ObjectId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-16',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('Leave');
+    });
+
+    it('should update existing attendance to Leave', async () => {
+      // First mark as Present
+      await request(app)
+        .post('/api/attendance/mark')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-17',
+        });
+
+      // Apply leave
+      const res = await request(app)
+        .post('/api/attendance/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: staffId1.toString(),
+          date: '2025-12-17',
+          remarks: 'Emergency leave'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('Leave');
+    });
+
+    it('should fail without staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          date: '2025-12-15'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should fail with invalid staffId', async () => {
+      const res = await request(app)
+        .post('/api/attendance/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          staffId: 'INVALID999',
+          date: '2025-12-15'
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Staff not found');
     });
   });
 });
