@@ -13,3 +13,6 @@ COMMANDS.md
 # Test coverage
 coverage/
 .nyc_output/
+
+# Seed files
+seed*.js
