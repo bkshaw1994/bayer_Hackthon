@@ -23,9 +23,15 @@ const { protect } = require('../middleware/auth');
  *         schema:
  *           type: string
  *         description: Filter by shift (Morning, Evening, Night)
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Get attendance status for specific date (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: List of staff with shift status
+ *         description: List of staff with shift status and optional attendance
  *       401:
  *         description: Not authorized
  *   post:
@@ -62,9 +68,15 @@ router.route('/').get(protect, getStaffs).post(protect, createStaff);
  *         schema:
  *           type: string
  *         description: Staff ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Get attendance status for specific date (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: Staff details
+ *         description: Staff details with optional attendance
  *       404:
  *         description: Staff not found
  *   put:

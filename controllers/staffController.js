@@ -1,4 +1,5 @@
 const Staff = require('../models/Staff');
+const Attendance = require('../models/Attendance');
 
 // Helper function to check shift requirements
 const checkShiftRequirements = (staffByShift) => {
@@ -77,7 +78,7 @@ const checkShiftRequirements = (staffByShift) => {
 };
 
 // @desc    Get all staff with shift requirements check
-// @route   GET /api/staff?shift=Morning (shift filter is optional)
+// @route   GET /api/staff?shift=Morning&date=2024-12-11 (shift and date filters are optional)
 const getStaffs = async (req, res) => {
   try {
     // Build query filter
@@ -87,6 +88,39 @@ const getStaffs = async (req, res) => {
     }
     
     const staff = await Staff.find(filter).select('name staffId role shift');
+    
+    // If date is provided, fetch attendance for that date
+    let staffWithAttendance = staff;
+    if (req.query.date) {
+      const queryDate = new Date(req.query.date).setHours(0, 0, 0, 0);
+      
+      // Get attendance records for all staff for the specified date
+      const staffIds = staff.map(s => s._id);
+      const attendanceRecords = await Attendance.find({
+        staffId: { $in: staffIds },
+        date: queryDate,
+      }).select('staffId status remarks');
+      
+      // Create a map of staffId to attendance
+      const attendanceMap = {};
+      attendanceRecords.forEach(record => {
+        attendanceMap[record.staffId.toString()] = {
+          status: record.status,
+          remarks: record.remarks,
+        };
+      });
+      
+      // Attach attendance to staff
+      staffWithAttendance = staff.map(member => {
+        const staffObj = member.toObject();
+        const attendance = attendanceMap[member._id.toString()];
+        return {
+          ...staffObj,
+          attendanceStatus: attendance ? attendance.status : 'Not Marked',
+          attendanceRemarks: attendance ? attendance.remarks : null,
+        };
+      });
+    }
     
     // Group staff by shift
     const staffByShift = {};
@@ -104,8 +138,11 @@ const getStaffs = async (req, res) => {
     res.json({ 
       success: true, 
       count: staff.length,
-      filter: req.query.shift ? { shift: req.query.shift } : null,
-      data: staff,
+      filter: { 
+        shift: req.query.shift || null,
+        date: req.query.date || null,
+      },
+      data: staffWithAttendance,
       shiftStatus,
     });
   } catch (error) {
@@ -117,7 +154,7 @@ const getStaffs = async (req, res) => {
 };
 
 // @desc    Get single staff member
-// @route   GET /api/staff/:id
+// @route   GET /api/staff/:id?date=2024-12-11 (date filter is optional)
 const getStaff = async (req, res) => {
   try {
     const staff = await Staff.findById(req.params.id);
@@ -127,9 +164,32 @@ const getStaff = async (req, res) => {
         error: 'Staff not found' 
       });
     }
+    
+    let staffData = staff.toObject();
+    
+    // If date is provided, fetch attendance for that date
+    if (req.query.date) {
+      const queryDate = new Date(req.query.date).setHours(0, 0, 0, 0);
+      
+      const attendance = await Attendance.findOne({
+        staffId: staff._id,
+        date: queryDate,
+      }).select('status remarks markedAt markedBy');
+      
+      staffData.attendance = attendance ? {
+        status: attendance.status,
+        remarks: attendance.remarks,
+        markedAt: attendance.markedAt,
+      } : {
+        status: 'Not Marked',
+        remarks: null,
+        markedAt: null,
+      };
+    }
+    
     res.json({ 
       success: true, 
-      data: staff 
+      data: staffData 
     });
   } catch (error) {
     res.status(500).json({ 
