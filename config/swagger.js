@@ -55,6 +55,10 @@ const options = {
           type: 'object',
           required: ['name', 'staffId', 'role', 'shift'],
           properties: {
+            _id: {
+              type: 'string',
+              description: 'MongoDB document ID',
+            },
             name: {
               type: 'string',
               description: 'Staff member name',
@@ -70,6 +74,32 @@ const options = {
             shift: {
               type: 'string',
               description: 'Assigned shift',
+            },
+            attendanceStatus: {
+              type: 'string',
+              description: 'Attendance status for the specified date (only included when date parameter is provided)',
+              enum: ['Present', 'Absent', 'Leave', 'Half-Day', 'Not Marked'],
+            },
+            attendanceRemarks: {
+              type: 'string',
+              description: 'Remarks for attendance on the specified date (only included when date parameter is provided)',
+            },
+            attendance: {
+              type: 'object',
+              description: 'Detailed attendance object for the specified date (only included in single staff endpoint when date parameter is provided)',
+              properties: {
+                status: {
+                  type: 'string',
+                  enum: ['Present', 'Absent', 'Leave', 'Half-Day', 'Not Marked'],
+                },
+                remarks: {
+                  type: 'string',
+                },
+                markedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
             },
           },
         },
