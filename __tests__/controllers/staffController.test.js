@@ -88,12 +88,13 @@ describe('Staff Controller Tests', () => {
   });
 
   describe('POST /api/staff', () => {
-    it('should create new staff with authentication', async () => {
+    it('should create new staff with authentication and auto-generate staffId', async () => {
       const newStaff = {
         name: 'New Doctor',
-        staffId: 'NEW001',
+        email: 'new.doctor@hospital.com',
         role: 'Doctor',
         shift: 'Morning',
+        date: '2025-12-12',
       };
 
       const response = await request(app)
@@ -104,7 +105,8 @@ describe('Staff Controller Tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.name).toBe('New Doctor');
-      expect(response.body.data.staffId).toBe('NEW001');
+      expect(response.body.data.email).toBe('new.doctor@hospital.com');
+      expect(response.body.data.staffId).toMatch(/^D\d{3}$/);
     });
 
     it('should fail to create staff without required fields', async () => {
@@ -120,7 +122,7 @@ describe('Staff Controller Tests', () => {
     it('should fail without authentication', async () => {
       const response = await request(app)
         .post('/api/staff')
-        .send({ name: 'Test', staffId: 'T001', role: 'Nurse', shift: 'Morning' });
+        .send({ name: 'Test', email: 'test@hospital.com', role: 'Nurse', shift: 'Morning' });
 
       expect(response.status).toBe(401);
     });
@@ -132,7 +134,7 @@ describe('Staff Controller Tests', () => {
     beforeEach(async () => {
       const staff = await Staff.create({
         name: 'Test Staff',
-        staffId: 'TEST001',
+        email: 'test.staff@hospital.com',
         role: 'Nurse',
         shift: 'Morning (8:00 AM - 4:00 PM)',
       });
@@ -166,7 +168,7 @@ describe('Staff Controller Tests', () => {
     beforeEach(async () => {
       const staff = await Staff.create({
         name: 'Update Test',
-        staffId: 'UPD001',
+        email: 'update.test@hospital.com',
         role: 'Nurse',
         shift: 'Morning (8:00 AM - 4:00 PM)',
       });
@@ -201,7 +203,7 @@ describe('Staff Controller Tests', () => {
     beforeEach(async () => {
       const staff = await Staff.create({
         name: 'Delete Test',
-        staffId: 'DEL001',
+        email: 'delete.test@hospital.com',
         role: 'Technician',
         shift: 'Evening (4:00 PM - 12:00 AM)',
       });
@@ -236,8 +238,8 @@ describe('Staff Controller Tests', () => {
     beforeEach(async () => {
       staff = await Staff.create({
         name: 'Test Staff',
-        staffId: 'T001',
-        role: 'Nurse',
+        email: 'test.staff@hospital.com',
+        role: 'Technician',
         shift: 'Morning'
       });
     });

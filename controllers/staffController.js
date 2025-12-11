@@ -204,7 +204,8 @@ const getStaff = async (req, res) => {
 
 const createStaff = async (req, res) => {
   try {
-    const staff = await Staff.create(req.body);
+    const { staffId, ...staffData } = req.body;
+    const staff = await Staff.create(staffData);
     
     // Create attendance records for upcoming 7 days if user is authenticated
     if (req.user && req.user.id) {

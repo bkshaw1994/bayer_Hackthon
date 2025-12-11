@@ -65,14 +65,18 @@ const { protect } = require('../middleware/auth');
  *                   data:
  *                     - name: "Dr. Smith"
  *                       staffId: "D001"
+ *                       email: "dr.smith@hospital.com"
  *                       role: "Doctor"
  *                       shift: "Morning"
+ *                       date: "2025-12-12"
  *                       attendanceStatus: "Present"
  *                       attendanceRemarks: "On time"
  *                     - name: "Nurse Johnson"
  *                       staffId: "N001"
+ *                       email: "nurse.johnson@hospital.com"
  *                       role: "Nurse"
  *                       shift: "Morning"
+ *                       date: "2025-12-12"
  *                       attendanceStatus: "Not Marked"
  *               shortStaffed:
  *                 summary: Short staffed shift with missing staff count
@@ -98,12 +102,16 @@ const { protect } = require('../middleware/auth');
  *                   data:
  *                     - name: "Nurse Johnson"
  *                       staffId: "N003"
+ *                       email: "nurse.johnson@hospital.com"
  *                       role: "Nurse"
  *                       shift: "Evening"
+ *                       date: "2025-12-12"
  *                     - name: "Tech Wilson"
  *                       staffId: "T002"
+ *                       email: "tech.wilson@hospital.com"
  *                       role: "Technician"
  *                       shift: "Evening"
+ *                       date: "2025-12-12"
  *               withoutDate:
  *                 summary: Without date parameter - no attendance data
  *                 value:
@@ -120,13 +128,15 @@ const { protect } = require('../middleware/auth');
  *                   data:
  *                     - name: "Dr. Smith"
  *                       staffId: "D001"
+ *                       email: "dr.smith@hospital.com"
  *                       role: "Doctor"
  *                       shift: "Morning"
+ *                       date: "2025-12-12"
  *       401:
  *         description: Not authorized
  *   post:
  *     summary: Create new staff member
- *     description: Creates a new staff member and automatically generates attendance records with "Not Marked" status for the next 7 days with their assigned shift.
+ *     description: Creates a new staff member with auto-generated staffId and automatically generates attendance records with "Not Marked" status for the next 7 days with their assigned shift. StaffId format - Doctor:D001, Nurse:N001, Technician:T001
  *     tags: [Staff]
  *     security:
  *       - bearerAuth: []
@@ -135,12 +145,29 @@ const { protect } = require('../middleware/auth');
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Staff'
+ *             type: object
+ *             required:
+ *               - name
+ *               - role
+ *               - shift
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               shift:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
  *           example:
- *             name: \"Dr. John Smith\"
- *             staffId: \"D004\"
- *             role: \"Doctor\"
- *             shift: \"Morning\"
+ *             name: \"Bishal\"
+ *             email: \"bishal@example.com\"
+ *             role: \"Technician\"
+ *             shift: \"Afternoon\"
+ *             date: \"2025-12-12\"
  *     responses:
  *       201:
  *         description: Staff created successfully
@@ -150,10 +177,12 @@ const { protect } = require('../middleware/auth');
  *               success: true
  *               data:
  *                 _id: \"674b1234567890abcdef9999\"
- *                 name: \"Dr. John Smith\"
- *                 staffId: \"D004\"
- *                 role: \"Doctor\"
- *                 shift: \"Morning\"
+ *                 name: "Bishal"
+ *                 staffId: "T001"
+ *                 email: "bishal@example.com"
+ *                 role: "Technician"
+ *                 shift: "Afternoon"
+ *                 date: "2025-12-12"
  *       400:
  *         description: Validation error
  *         content:
@@ -206,8 +235,10 @@ router.post('/', protect, createStaff);
  *                   data:
  *                     name: "Dr. Smith"
  *                     staffId: "D001"
+ *                     email: "dr.smith@hospital.com"
  *                     role: "Doctor"
  *                     shift: "Morning"
+ *                     date: "2025-12-12"
  *                     attendance:
  *                       status: "Present"
  *                       remarks: "On time"
@@ -219,8 +250,10 @@ router.post('/', protect, createStaff);
  *                   data:
  *                     name: "Dr. Smith"
  *                     staffId: "D001"
+ *                     email: "dr.smith@hospital.com"
  *                     role: "Doctor"
  *                     shift: "Morning"
+ *                     date: "2025-12-12"
  *                     attendance:
  *                       status: "Not Marked"
  *       404:
@@ -245,8 +278,10 @@ router.post('/', protect, createStaff);
  *             $ref: '#/components/schemas/Staff'
  *           example:
  *             name: "Dr. John Smith Updated"
+ *             email: "john.updated@hospital.com"
  *             role: "Doctor"
  *             shift: "Evening"
+ *             date: "2025-12-13"
  *     responses:
  *       200:
  *         description: Staff updated successfully
@@ -258,8 +293,10 @@ router.post('/', protect, createStaff);
  *                 _id: "674b1234567890abcdef1234"
  *                 name: "Dr. John Smith Updated"
  *                 staffId: "D001"
+ *                 email: "john.updated@hospital.com"
  *                 role: "Doctor"
  *                 shift: "Evening"
+ *                 date: "2025-12-13"
  *       404:
  *         description: Staff not found
  *   delete:
@@ -325,8 +362,10 @@ router.delete('/:id', protect, deleteStaff);
  *                 _id: "674b1234567890abcdef1234"
  *                 name: "Dr. Sarah Johnson"
  *                 staffId: "D001"
+ *                 email: "sarah.johnson@hospital.com"
  *                 role: "Doctor"
  *                 shift: "Morning"
+ *                 date: "2025-12-12"
  *               period:
  *                 startDate: "2025-12-05"
  *                 endDate: "2025-12-11"
