@@ -66,7 +66,6 @@ const checkShiftRequirements = (staffByShift) => {
 
     shiftStatus[shift] = {
       isFullyStaffed,
-      staff: staffList,
       staffCount: {
         Doctor: doctorCount,
         Nurse: nurseCount,
