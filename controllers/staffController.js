@@ -77,10 +77,16 @@ const checkShiftRequirements = (staffByShift) => {
 };
 
 // @desc    Get all staff with shift requirements check
-// @route   GET /api/staff
+// @route   GET /api/staff?shift=Morning (shift filter is optional)
 const getStaffs = async (req, res) => {
   try {
-    const staff = await Staff.find().select('name staffId role shift');
+    // Build query filter
+    const filter = {};
+    if (req.query.shift) {
+      filter.shift = req.query.shift;
+    }
+    
+    const staff = await Staff.find(filter).select('name staffId role shift');
     
     // Group staff by shift
     const staffByShift = {};
@@ -98,6 +104,7 @@ const getStaffs = async (req, res) => {
     res.json({ 
       success: true, 
       count: staff.length,
+      filter: req.query.shift ? { shift: req.query.shift } : null,
       data: staff,
       shiftStatus,
     });
