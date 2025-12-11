@@ -40,8 +40,21 @@ const { protect } = require('../middleware/auth');
  *                   type: string
  *                 user:
  *                   $ref: '#/components/schemas/User'
+ *             example:
+ *               success: true
+ *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               user:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "John Doe"
+ *                 userName: "john_doe"
+ *                 email: "john@example.com"
  *       401:
  *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: "Invalid credentials"
  */
 router.post('/login', login);
 
@@ -65,8 +78,20 @@ router.post('/login', login);
  *                   type: boolean
  *                 data:
  *                   $ref: '#/components/schemas/User'
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "John Doe"
+ *                 userName: "john_doe"
+ *                 email: "john@example.com"
  *       401:
  *         description: Not authorized
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: "Not authorized, no token"
  */
 router.get('/me', protect, getMe);
 

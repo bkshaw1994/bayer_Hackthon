@@ -47,6 +47,39 @@ router.use(protect);
  *     responses:
  *       200:
  *         description: List of attendance records with grouped data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Attendance'
+ *             example:
+ *               success: true
+ *               count: 4
+ *               groupedData:
+ *                 "2025-12-11":
+ *                   Morning:
+ *                     - staffId:
+ *                         name: "Dr. Sarah Johnson"
+ *                         staffId: "D001"
+ *                         role: "Doctor"
+ *                       status: "Present"
+ *                       remarks: ""
+ *                       markedAt: "2025-12-11T08:30:00.000Z"
+ *               data:
+ *                 - staffId:
+ *                     name: "Dr. Sarah Johnson"
+ *                     staffId: "D001"
+ *                   date: "2025-12-11"
+ *                   shift: "Morning"
+ *                   status: "Present"
  *       401:
  *         description: Not authorized
  *   post:
@@ -63,8 +96,25 @@ router.use(protect);
  *     responses:
  *       201:
  *         description: Attendance marked successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Attendance marked successfully"
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 staffId: "674b1234567890abcdef5678"
+ *                 date: "2025-12-11"
+ *                 shift: "Morning"
+ *                 status: "Present"
+ *                 remarks: "On time"
  *       200:
  *         description: Attendance updated (if already exists)
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Attendance updated successfully"
  *       404:
  *         description: Staff not found
  *
@@ -88,6 +138,14 @@ router.use(protect);
  *     responses:
  *       201:
  *         description: Bulk attendance marked successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Bulk attendance marked successfully"
+ *               created: 5
+ *               updated: 2
+ *               failed: 0
  *       400:
  *         description: Invalid request
  *
@@ -119,6 +177,27 @@ router.use(protect);
  *     responses:
  *       200:
  *         description: Staff attendance history with statistics
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               staff:
+ *                 name: "Dr. Sarah Johnson"
+ *                 staffId: "D001"
+ *                 role: "Doctor"
+ *                 shift: "Morning"
+ *               statistics:
+ *                 totalDays: 7
+ *                 present: 6
+ *                 absent: 0
+ *                 leave: 1
+ *                 halfDay: 0
+ *                 attendanceRate: "85.7%"
+ *               data:
+ *                 - date: "2025-12-11"
+ *                   shift: "Morning"
+ *                   status: "Present"
+ *                   remarks: ""
  *       404:
  *         description: Staff not found
  *
@@ -150,6 +229,15 @@ router.use(protect);
  *     responses:
  *       200:
  *         description: Attendance updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Attendance updated successfully"
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 status: "Leave"
+ *                 remarks: "Sick leave"
  *       404:
  *         description: Attendance record not found
  *   delete:
@@ -167,6 +255,11 @@ router.use(protect);
  *     responses:
  *       200:
  *         description: Attendance deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Attendance record deleted"
  *       404:
  *         description: Attendance record not found
  */

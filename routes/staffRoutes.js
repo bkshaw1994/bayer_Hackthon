@@ -99,11 +99,31 @@ const { protect } = require('../middleware/auth');
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Staff'
+ *           example:
+ *             name: \"Dr. John Smith\"
+ *             staffId: \"D004\"
+ *             role: \"Doctor\"
+ *             shift: \"Morning\"
  *     responses:
  *       201:
  *         description: Staff created successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: \"674b1234567890abcdef9999\"
+ *                 name: \"Dr. John Smith\"
+ *                 staffId: \"D004\"
+ *                 role: \"Doctor\"
+ *                 shift: \"Morning\"
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: \"Staff with this ID already exists\"
  */
 router.route('/').get(protect, getStaffs).post(protect, createStaff);
 
@@ -184,9 +204,23 @@ router.route('/').get(protect, getStaffs).post(protect, createStaff);
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Staff'
+ *           example:
+ *             name: "Dr. John Smith Updated"
+ *             role: "Doctor"
+ *             shift: "Evening"
  *     responses:
  *       200:
  *         description: Staff updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "Dr. John Smith Updated"
+ *                 staffId: "D001"
+ *                 role: "Doctor"
+ *                 shift: "Evening"
  *       404:
  *         description: Staff not found
  *   delete:
@@ -203,8 +237,18 @@ router.route('/').get(protect, getStaffs).post(protect, createStaff);
  *     responses:
  *       200:
  *         description: Staff deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "Staff removed"
  *       404:
  *         description: Staff not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: "Staff not found"
  */
 router.route('/:id').get(protect, getStaff).put(protect, updateStaff).delete(protect, deleteStaff);
 

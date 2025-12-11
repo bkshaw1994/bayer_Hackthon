@@ -20,6 +20,20 @@ const { protect } = require('../middleware/auth');
  *     responses:
  *       200:
  *         description: List of users
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               count: 2
+ *               data:
+ *                 - _id: "674b1234567890abcdef1234"
+ *                   name: "John Doe"
+ *                   userName: "john_doe"
+ *                   email: "john@example.com"
+ *                 - _id: "674b1234567890abcdef5678"
+ *                   name: "Jane Smith"
+ *                   userName: "jane_smith"
+ *                   email: "jane@example.com"
  *       401:
  *         description: Not authorized
  *   post:
@@ -36,8 +50,22 @@ const { protect } = require('../middleware/auth');
  *     responses:
  *       201:
  *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "674b1234567890abcdef9999"
+ *                 name: "New User"
+ *                 userName: "newuser"
+ *                 email: "newuser@example.com"
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               error: "User already exists"
  */
 router.route('/').get(protect, getUsers).post(protect, createUser);
 
@@ -59,6 +87,15 @@ router.route('/').get(protect, getUsers).post(protect, createUser);
  *     responses:
  *       200:
  *         description: User details
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "John Doe"
+ *                 userName: "john_doe"
+ *                 email: "john@example.com"
  *       404:
  *         description: User not found
  *   put:
@@ -81,6 +118,15 @@ router.route('/').get(protect, getUsers).post(protect, createUser);
  *     responses:
  *       200:
  *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "674b1234567890abcdef1234"
+ *                 name: "John Doe Updated"
+ *                 userName: "john_doe"
+ *                 email: "john.updated@example.com"
  *       404:
  *         description: User not found
  *   delete:
@@ -97,6 +143,11 @@ router.route('/').get(protect, getUsers).post(protect, createUser);
  *     responses:
  *       200:
  *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: "User removed"
  *       404:
  *         description: User not found
  */
