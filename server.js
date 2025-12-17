@@ -11,7 +11,10 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 const allowedOrigins = [
-  "https://red-pebble-03589a91e.3.azurestaticapps.net/"
+  "https://red-pebble-03589a91e.3.azurestaticapps.net",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:3001"
 ];
 
 app.use(cors({
@@ -22,12 +25,14 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("CORS not allowed"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  credentials: true,
+  maxAge: 86400
 }));
 
 app.options("*", cors());
