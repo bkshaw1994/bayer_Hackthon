@@ -36,10 +36,18 @@ app.use(cors({
 
     // For development, allow any localhost
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      console.log(`CORS allowed (localhost): ${origin}`);
+      return callback(null, true);
+    }
+
+    // For production, allow Azure Static Web Apps and any azurestaticapps.net domain
+    if (origin.includes('azurestaticapps.net')) {
+      console.log(`CORS allowed (Azure): ${origin}`);
       return callback(null, true);
     }
 
     if (allowedOrigins.includes(origin)) {
+      console.log(`CORS allowed (whitelist): ${origin}`);
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
