@@ -37,10 +37,9 @@ const { protect } = require('../middleware/auth');
  *       401:
  *         description: Not authorized
  *   post:
- *     summary: Create new user (Admin only)
+ *     summary: Create new user (Public signup)
  *     tags: [Users]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -69,7 +68,7 @@ const { protect } = require('../middleware/auth');
  *               error: "User already exists"
  */
 router.get('/', protect, getUsers);
-router.post('/', protect, createUser);
+router.post('/', createUser);
 
 /**
  * @swagger
