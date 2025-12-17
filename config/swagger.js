@@ -1,4 +1,25 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+require('dotenv').config();
+
+const getServers = () => {
+  const servers = [];
+  
+  // Always include development server
+  servers.push({
+    url: 'http://localhost:3000',
+    description: 'Development server',
+  });
+  
+  // Add production server if BACKEND_URL is set and different from localhost
+  if (process.env.BACKEND_URL && !process.env.BACKEND_URL.includes('localhost')) {
+    servers.push({
+      url: process.env.BACKEND_URL,
+      description: 'Production server',
+    });
+  }
+  
+  return servers;
+};
 
 const options = {
   definition: {
@@ -11,12 +32,7 @@ const options = {
         name: 'API Support',
       },
     },
-    servers: [
-      {
-        url: 'http://localhost:3000',
-        description: 'Development server',
-      },
-    ],
+    servers: getServers(),
     components: {
       securitySchemes: {
         bearerAuth: {
