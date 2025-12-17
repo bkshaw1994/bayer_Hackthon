@@ -1,24 +1,42 @@
 const swaggerJsdoc = require('swagger-jsdoc');
-require('dotenv').config();
 
 const getServers = () => {
-  const servers = [];
-  
-  // Always include development server
-  servers.push({
-    url: 'http://localhost:3000',
-    description: 'Development server',
-  });
-  
-  // Add production server if BACKEND_URL is set and different from localhost
-  if (process.env.BACKEND_URL && !process.env.BACKEND_URL.includes('localhost')) {
+  try {
+    const servers = [];
+    
+    // Always include development server
     servers.push({
-      url: process.env.BACKEND_URL,
-      description: 'Production server',
+      url: 'http://localhost:3000',
+      description: 'Development server',
     });
+    
+    // Add production server if BACKEND_URL is set and different from localhost
+    const backendUrl = process.env.BACKEND_URL;
+    if (backendUrl && !backendUrl.includes('localhost')) {
+      servers.push({
+        url: backendUrl,
+        description: 'Production server',
+      });
+    }
+    
+    // Always have at least localhost as fallback
+    if (servers.length === 1) {
+      servers.push({
+        url: 'http://localhost:3001',
+        description: 'Alternative development server',
+      });
+    }
+    
+    return servers;
+  } catch (error) {
+    console.error('Error in getServers():', error);
+    return [
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server',
+      },
+    ];
   }
-  
-  return servers;
 };
 
 const options = {

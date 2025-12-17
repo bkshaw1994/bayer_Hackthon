@@ -65,6 +65,26 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/staff', require('./routes/staffRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  
+  if (err.message === 'CORS not allowed') {
+    return res.status(403).json({ 
+      success: false, 
+      error: 'CORS error: Origin not allowed' 
+    });
+  }
+  
+  res.status(500).json({ 
+    success: false, 
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Internal Server Error' 
+      : err.message 
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
