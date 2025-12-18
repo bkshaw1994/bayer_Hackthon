@@ -73,6 +73,10 @@ try {
   console.log('Staff routes loaded');
   app.use('/api/attendance', require('./routes/attendanceRoutes'));
   console.log('Attendance routes loaded');
+  app.use('/api/leave', require('./routes/leaveRoutes'));
+  console.log('Leave routes loaded');
+  app.use('/api/shift', require('./routes/shiftRoutes'));
+  console.log('Shift routes loaded');
 } catch (error) {
   console.error('Error loading routes:', error.message, error.stack);
 }
